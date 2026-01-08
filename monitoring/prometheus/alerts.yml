@@ -1,0 +1,167 @@
+groups:
+- name: margwa_services
+  interval: 30s
+  rules:
+  # High error rate alert
+  - alert: HighErrorRate
+    expr: |
+      (
+        sum(rate(http_requests_total{status=~"5.."}[5m])) by (service)
+        /
+        sum(rate(http_requests_total[5m])) by (service)
+      ) > 0.05
+    for: 5m
+    labels:
+      severity: critical
+      component: "{{ $labels.service }}"
+    annotations:
+      summary: "High error rate detected for {{ $labels.service }}"
+      description: "{{ $labels.service }} has error rate above 5% (current: {{ $value | humanizePercentage }})"
+
+  # High response time alert
+  - alert: HighResponseTime
+    expr: |
+      histogram_quantile(0.95,
+        sum(rate(http_request_duration_seconds_bucket[5m])) by (service, le)
+      ) > 2
+    for: 5m
+    labels:
+      severity: warning
+      component: "{{ $labels.service }}"
+    annotations:
+      summary: "High response time for {{ $labels.service }}"
+      description: "{{ $labels.service }} p95 response time is {{ $value }}s (threshold: 2s)"
+
+  # Service down alert
+  - alert: ServiceDown
+    expr: up{job=~"api-gateway|auth-service|route-service|realtime-service"} == 0
+    for: 2m
+    labels:
+      severity: critical
+      component: "{{ $labels.job }}"
+    annotations:
+      summary: "Service {{ $labels.job }} is down"
+      description: "{{ $labels.job }} has been down for more than 2 minutes"
+
+  # Pod crash looping
+  - alert: PodCrashLooping
+    expr: |
+      rate(kube_pod_container_status_restarts_total{namespace="margwa"}[15m]) > 0
+    for: 5m
+    labels:
+      severity: warning
+      component: "{{ $labels.pod }}"
+    annotations:
+      summary: "Pod {{ $labels.pod }} is crash looping"
+      description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is restarting frequently"
+
+  # High CPU usage
+  - alert: HighCPUUsage
+    expr: |
+      100 * (
+        sum(rate(container_cpu_usage_seconds_total{namespace="margwa"}[5m])) by (pod)
+        /
+        sum(container_spec_cpu_quota{namespace="margwa"}/container_spec_cpu_period{namespace="margwa"}) by (pod)
+      ) > 90
+    for: 10m
+    labels:
+      severity: warning
+      component: "{{ $labels.pod }}"
+    annotations:
+      summary: "High CPU usage for {{ $labels.pod }}"
+      description: "{{ $labels.pod }} is using {{ $value }}% CPU"
+
+  # High memory usage
+  - alert: HighMemoryUsage
+    expr: |
+      100 * (
+        sum(container_memory_working_set_bytes{namespace="margwa"}) by (pod)
+        /
+        sum(container_spec_memory_limit_bytes{namespace="margwa"}) by (pod)
+      ) > 90
+    for: 10m
+    labels:
+      severity: warning
+      component: "{{ $labels.pod }}"
+    annotations:
+      summary: "High memory usage for {{ $labels.pod }}"
+      description: "{{ $labels.pod }} is using {{ $value }}% memory"
+
+  # Database connection pool exhausted
+  - alert: DatabaseConnectionPoolExhausted
+    expr: |
+      (
+        sum(pg_stat_database_numbackends) by (instance)
+        /
+        sum(pg_settings_max_connections) by (instance)
+      ) > 0.9
+    for: 5m
+    labels:
+      severity: critical
+      component: database
+    annotations:
+      summary: "PostgreSQL connection pool nearly exhausted"
+      description: "PostgreSQL is using {{ $value | humanizePercentage }} of available connections"
+
+  # HPA at max replicas
+  - alert: HPAMaxedOut
+    expr: |
+      kube_horizontalpodautoscaler_status_current_replicas{namespace="margwa"}
+      >=
+      kube_horizontalpodautoscaler_spec_max_replicas{namespace="margwa"}
+    for: 15m
+    labels:
+      severity: warning
+      component: "{{ $labels.horizontalpodautoscaler }}"
+    annotations:
+      summary: "HPA {{ $labels.horizontalpodautoscaler }} at maximum replicas"
+      description: "{{ $labels.horizontalpodautoscaler }} has been at max replicas for 15 minutes. Consider increasing max replicas."
+
+  # Scaling event
+  - alert: ScalingEvent
+    expr: |
+      changes(kube_horizontalpodautoscaler_status_current_replicas{namespace="margwa"}[5m]) > 0
+    labels:
+      severity: info
+      component: "{{ $labels.horizontalpodautoscaler }}"
+    annotations:
+      summary: "Scaling event for {{ $labels.horizontalpodautoscaler }}"
+      description: "{{ $labels.horizontalpodautoscaler }} scaled to {{ $value }} replicas"
+
+  # Redis down
+  - alert: RedisDown
+    expr: redis_up == 0
+    for: 2m
+    labels:
+      severity: critical
+      component: redis
+    annotations:
+      summary: "Redis is down"
+      description: "Redis has been unavailable for more than 2 minutes"
+
+  # High request rate
+  - alert: HighRequestRate
+    expr: |
+      sum(rate(http_requests_total[5m])) by (service) > 1000
+    labels:
+      severity: info
+      component: "{{ $labels.service }}"
+    annotations:
+      summary: "High request rate for {{ $labels.service }}"
+      description: "{{ $labels.service }} is receiving {{ $value }} req/s"
+
+  # Disk space low
+  - alert: DiskSpaceLow
+    expr: |
+      (
+        node_filesystem_avail_bytes{mountpoint="/"}
+        /
+        node_filesystem_size_bytes{mountpoint="/"}
+      ) < 0.1
+    for: 5m
+    labels:
+      severity: warning
+      component: infrastructure
+    annotations:
+      summary: "Low disk space on {{ $labels.instance }}"
+      description: "Disk space is below 10% on {{ $labels.instance }}"
