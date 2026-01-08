@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+target/
+vendor/
+
+# Environment files
+.env
+.env.local
+.env.production
+*.secret
+
+# Build outputs
+dist/
+build/
+out/
+*.exe
+*.wasm
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.db
+*.sqlite
+*.sql.backup
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Uploads
+uploads/
+temp/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Docker
+*.dockerignore
+
+# Rust
+Cargo.lock
+*.rs.bk
+
+# Go
+go.sum
+*.test
+*.out
+
+# Certificates
+*.pem
+*.key
+*.crt
+
+# Drizzle
+drizzle/
+.drizzle/

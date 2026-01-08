@@ -1,0 +1,233 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with PostGIS
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: margwa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: margwa_db
+      POSTGRES_USER: margwa_user
+      POSTGRES_PASSWORD: margwa_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - margwa-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U margwa_user -d margwa_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache & Pub/Sub
+  redis:
+    image: redis:7-alpine
+    container_name: margwa-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - margwa-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  # API Gateway (TypeScript)
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: margwa-api-gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://margwa_user:margwa_password@postgres:5432/margwa_db
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - margwa-network
+    volumes:
+      - ./services/api-gateway:/app
+      - /app/node_modules
+
+  # Route Service (TypeScript)
+  route-service:
+    build:
+      context: ./services/route-service
+      dockerfile: Dockerfile
+    container_name: margwa-route-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DATABASE_URL: postgresql://margwa_user:margwa_password@postgres:5432/margwa_db
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - margwa-network
+    volumes:
+      - ./services/route-service:/app
+      - /app/node_modules
+
+  # Real-time Service (TypeScript/WebSocket)
+  realtime-service:
+    build:
+      context: ./services/realtime-service
+      dockerfile: Dockerfile
+    container_name: margwa-realtime-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - margwa-network
+    volumes:
+      - ./services/realtime-service:/app
+      - /app/node_modules
+
+  # Chat Service (TypeScript)
+  chat-service:
+    build:
+      context: ./services/chat-service
+      dockerfile: Dockerfile
+    container_name: margwa-chat-service
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      DATABASE_URL: postgresql://margwa_user:margwa_password@postgres:5432/margwa_db
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - margwa-network
+    volumes:
+      - ./services/chat-service:/app
+      - /app/node_modules
+
+  # Auth Service (Go)
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: margwa-auth-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      AUTH_SERVICE_PORT: 3001
+      DATABASE_URL: postgresql://margwa_user:margwa_password@postgres:5432/margwa_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - margwa-network
+    volumes:
+      - ./services/auth-service:/app
+      - /app/margwa-auth-service
+
+  # Analytics Service (Rust)
+  analytics-service:
+    build:
+      context: ./services/analytics-service
+      dockerfile: Dockerfile
+    container_name: margwa-analytics-service
+    restart: unless-stopped
+    ports:
+      - "3007:3007"
+    environment:
+      ANALYTICS_SERVICE_PORT: 3007
+      DATABASE_URL: postgresql://margwa_user:margwa_password@postgres:5432/margwa_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - margwa-network
+    volumes:
+      - ./services/analytics-service:/app
+      - /app/target
+
+  # PgAdmin (Database Management UI)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: margwa-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@margwa.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - margwa-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  # Redis Commander (Redis Management UI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: margwa-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - margwa-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  margwa-network:
+    driver: bridge
