@@ -23,7 +23,7 @@ type Config struct {
 
 func LoadConfig() *Config {
 	otpExpiry, _ := strconv.Atoi(getEnv("OTP_EXPIRY_MINUTES", "10"))
-	otpLength, _ := strconv.Atoi(getEnv("OTP_LENGTH", "4"))
+	otpLength, _ := strconv.Atoi(getEnv("OTP_LENGTH", "6"))
 
 	return &Config{
 		Port:              getEnv("AUTH_SERVICE_PORT", "3001"),

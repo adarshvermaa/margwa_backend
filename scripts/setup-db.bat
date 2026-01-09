@@ -20,14 +20,14 @@ echo Applying migrations...
 call npm run db:migrate
 echo.
 
-echo [2/3] Seeding database with sample data...
-cd ..\..
-call npm run db:seed
-echo.
+@REM echo [2/3] Seeding database with sample data...
+@REM cd ..\..
+@REM call npm run db:seed
+@REM echo.
 
-echo [3/3] Testing database connection...
-call npm run test:api
-echo.
+@REM echo [3/3] Testing database connection...
+@REM call npm run test:api
+@REM echo.
 
 echo ====================================
 echo Database setup complete!

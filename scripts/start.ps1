@@ -39,7 +39,7 @@ Start-Process cmd -ArgumentList "/k", "cd services\api-gateway && npm run dev" -
 Start-Sleep -Seconds 2
 
 Write-Host "Starting Auth Service (Port 3001)..." -ForegroundColor Yellow
-Start-Process cmd -ArgumentList "/k", "cd services\auth-service && go run main.go" -WindowStyle Normal
+Start-Process cmd -ArgumentList "/k", "cd services\auth-service && npx -y nodemon --watch . --ext go --exec ""go run main.go""" -WindowStyle Normal
 Start-Sleep -Seconds 2
 
 Write-Host "Starting Route Service (Port 3002)..." -ForegroundColor Yellow
@@ -59,11 +59,11 @@ Start-Process cmd -ArgumentList "/k", "cd services\notification-service && npm r
 Start-Sleep -Seconds 2
 
 Write-Host "Starting Payment Service (Port 3007)..." -ForegroundColor Yellow
-Start-Process cmd -ArgumentList "/k", "cd services\payment-service && go run main.go" -WindowStyle Normal
+Start-Process cmd -ArgumentList "/k", "cd services\payment-service && npx -y nodemon --watch . --ext go --exec ""go run main.go""" -WindowStyle Normal
 Start-Sleep -Seconds 2
 
 Write-Host "Starting Analytics Service (Port 3008)..." -ForegroundColor Yellow
-Start-Process cmd -ArgumentList "/k", "cd services\analytics-service && go run main.go" -WindowStyle Normal
+Start-Process cmd -ArgumentList "/k", "cd services\analytics-service && npx -y nodemon --watch . --ext go --exec ""go run main.go""" -WindowStyle Normal
 Start-Sleep -Seconds 2
 
 Write-Host ""

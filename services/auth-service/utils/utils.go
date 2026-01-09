@@ -22,6 +22,9 @@ type JWTClaims struct {
 // GenerateOTP creates a random OTP of specified length
 func GenerateOTP(length int) (string, error) {
 	const digits = "0123456789"
+	if length <= 0 {
+		length = 6
+	}
 	otp := make([]byte, length)
 
 	for i := 0; i < length; i++ {

@@ -135,7 +135,7 @@ func (h *AuthHandler) VerifyOTP(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse("VALIDATION_ERROR", "Invalid request data", err.Error()))
 		return
 	}
-
+	log.Printf(req.PhoneNumber, req.PhoneCountryCode)
 	// Get user
 	var user models.User
 	err := h.db.QueryRow(context.Background(),

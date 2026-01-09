@@ -7,84 +7,35 @@ import { logger } from '../utils/logger';
 const router = Router();
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
 
-// Forward requests to Auth Service
-router.post('/register', async (req: Request, res: Response) => {
+// Helper for axios requests
+const forwardRequest = async (method: 'post' | 'get' | 'put', path: string, req: Request, res: Response) => {
     try {
-        const response = await axios.post(`${AUTH_SERVICE_URL}/auth/register`, req.body);
-        res.json(response.data);
+        const response = await axios({
+            method,
+            url: `${AUTH_SERVICE_URL}${path}`,
+            data: req.body,
+            headers: req.headers.authorization ? { Authorization: req.headers.authorization } : undefined,
+            validateStatus: () => true, // Don't throw on error status
+        });
+        res.status(response.status).json(response.data);
     } catch (error: any) {
-        logger.error('Auth service error:', error.message);
-        res.status(error.response?.status || 500).json(
-            error.response?.data || errorResponse(
+        logger.error(`Auth service error [${path}]:`, error.message);
+        res.status(500).json(
+            errorResponse(
                 ErrorCodes.SERVICE_UNAVAILABLE,
-                'Authentication service unavailable'
+                'Authentication service unavailable',
+                error.message
             )
         );
     }
-});
+};
 
-router.post('/send-otp', async (req: Request, res: Response) => {
-    try {
-        const response = await axios.post(`${AUTH_SERVICE_URL}/auth/send-otp`, req.body);
-        res.json(response.data);
-    } catch (error: any) {
-        logger.error('Auth service error:', error.message);
-        res.status(error.response?.status || 500).json(
-            error.response?.data || errorResponse(
-                ErrorCodes.SERVICE_UNAVAILABLE,
-                'Authentication service unavailable'
-            )
-        );
-    }
-});
-
-router.post('/verify-otp', async (req: Request, res: Response) => {
-    try {
-        const response = await axios.post(`${AUTH_SERVICE_URL}/auth/verify-otp`, req.body);
-        res.json(response.data);
-    } catch (error: any) {
-        logger.error('Auth service error:', error.message);
-        res.status(error.response?.status || 500).json(
-            error.response?.data || errorResponse(
-                ErrorCodes.SERVICE_UNAVAILABLE,
-                'Authentication service unavailable'
-            )
-        );
-    }
-});
-
-router.post('/refresh-token', async (req: Request, res: Response) => {
-    try {
-        const response = await axios.post(`${AUTH_SERVICE_URL}/auth/refresh-token`, req.body);
-        res.json(response.data);
-    } catch (error: any) {
-        logger.error('Auth service error:', error.message);
-        res.status(error.response?.status || 500).json(
-            error.response?.data || errorResponse(
-                ErrorCodes.SERVICE_UNAVAILABLE,
-                'Authentication service unavailable'
-            )
-        );
-    }
-});
-
-router.post('/logout', async (req: Request, res: Response) => {
-    try {
-        const response = await axios.post(
-            `${AUTH_SERVICE_URL}/auth/logout`,
-            req.body,
-            { headers: { Authorization: req.headers.authorization } }
-        );
-        res.json(response.data);
-    } catch (error: any) {
-        logger.error('Auth service error:', error.message);
-        res.status(error.response?.status || 500).json(
-            error.response?.data || errorResponse(
-                ErrorCodes.SERVICE_UNAVAILABLE,
-                'Authentication service unavailable'
-            )
-        );
-    }
-});
+router.post('/register', (req, res) => forwardRequest('post', '/auth/register', req, res));
+router.post('/send-otp', (req, res) => forwardRequest('post', '/auth/send-otp', req, res));
+router.post('/verify-otp', (req, res) => forwardRequest('post', '/auth/verify-otp', req, res));
+router.post('/refresh-token', (req, res) => forwardRequest('post', '/auth/refresh-token', req, res));
+router.post('/logout', (req, res) => forwardRequest('post', '/auth/logout', req, res));
+router.get('/profile', (req, res) => forwardRequest('get', '/auth/profile', req, res));
+router.put('/profile', (req, res) => forwardRequest('put', '/auth/profile', req, res));
 
 export default router;

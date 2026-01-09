@@ -78,11 +78,11 @@ type UpdateProfileRequest struct {
 }
 
 type AuthResponse struct {
-	Success      bool        `json:"success"`
-	Data         interface{} `json:"data,omitempty"`
-	Message      string      `json:"message,omitempty"`
-	Error        *ErrorData  `json:"error,omitempty"`
-	Timestamp    string      `json:"timestamp"`
+	Success   bool        `json:"success"`
+	Data      interface{} `json:"data,omitempty"`
+	Message   string      `json:"message,omitempty"`
+	Error     *ErrorData  `json:"error,omitempty"`
+	Timestamp string      `json:"timestamp"`
 }
 
 type ErrorData struct {
