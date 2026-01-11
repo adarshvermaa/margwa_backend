@@ -15,7 +15,7 @@ echo "Stopping any running services..."
 echo ""
 
 # Stop services on all ports
-PORTS=(3000 3001 3002 3004 3005 3006 3007 3008)
+PORTS=(3000 3001 3002 3004 3005 3006 3007 3008 3009)
 for port in "${PORTS[@]}"; do
     pid=$(lsof -ti :$port 2>/dev/null)
     if [ ! -z "$pid" ]; then
@@ -63,6 +63,10 @@ echo "Starting Analytics Service (Port 3008)..."
 (cd services/analytics-service && go run main.go > ../../logs/analytics-service.log 2>&1 &)
 sleep 2
 
+echo "Starting Places Service (Port 3009)..."
+(cd services/places-service && npm run dev > ../../logs/places-service.log 2>&1 &)
+sleep 2
+
 echo ""
 echo "===================================="
 echo "All services started!"
@@ -77,6 +81,7 @@ echo "- Chat Service:         http://localhost:3005"
 echo "- Notification Service: http://localhost:3006"
 echo "- Payment Service:      http://localhost:3007"
 echo "- Analytics Service:    http://localhost:3008"
+echo "- Places Service:       http://localhost:3009"
 echo ""
 echo "Logs are available in the logs/ directory"
 echo ""

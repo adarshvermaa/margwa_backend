@@ -74,14 +74,21 @@ cd ../..
 echo ""
 
 # Install Go Payment Service dependencies
-echo "[9/10] Installing Go Payment Service dependencies..."
+echo "[9/11] Installing Go Payment Service dependencies..."
 cd services/payment-service
 go mod download
 cd ../..
 echo ""
 
+# Install Places Service dependencies
+echo "[10/11] Installing Places Service dependencies..."
+cd services/places-service
+npm install
+cd ../..
+echo ""
+
 # Install Go Analytics Service dependencies
-echo "[10/10] Installing Go Analytics Service dependencies..."
+echo "[11/11] Installing Go Analytics Service dependencies..."
 cd services/analytics-service
 go mod download
 cd ../..

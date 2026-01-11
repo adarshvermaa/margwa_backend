@@ -10,7 +10,7 @@ Write-Host "Stopping any running services..." -ForegroundColor Yellow
 Write-Host ""
 
 # Stop services on all ports
-$ports = @(3000, 3001, 3002, 3004, 3005, 3006, 3007, 3008)
+$ports = @(3000, 3001, 3002, 3004, 3005, 3006, 3007, 3008, 3009)
 foreach ($port in $ports) {
     try {
         $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
@@ -66,6 +66,10 @@ Write-Host "Starting Analytics Service (Port 3008)..." -ForegroundColor Yellow
 Start-Process cmd -ArgumentList "/k", "cd services\analytics-service && npx -y nodemon --watch . --ext go --exec ""go run main.go""" -WindowStyle Normal
 Start-Sleep -Seconds 2
 
+Write-Host "Starting Places Service (Port 3009)..." -ForegroundColor Yellow
+Start-Process cmd -ArgumentList "/k", "cd services\places-service && npm run dev" -WindowStyle Normal
+Start-Sleep -Seconds 2
+
 Write-Host ""
 Write-Host "====================================" -ForegroundColor Cyan
 Write-Host "All services started!" -ForegroundColor Green
@@ -80,6 +84,7 @@ Write-Host "- Chat Service:         http://localhost:3005" -ForegroundColor Gray
 Write-Host "- Notification Service: http://localhost:3006" -ForegroundColor Gray
 Write-Host "- Payment Service:      http://localhost:3007" -ForegroundColor Gray
 Write-Host "- Analytics Service:    http://localhost:3008" -ForegroundColor Gray
+Write-Host "- Places Service:       http://localhost:3009" -ForegroundColor Gray
 Write-Host ""
 
 # Ask to test services
