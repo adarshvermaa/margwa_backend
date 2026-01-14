@@ -206,6 +206,41 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
+  # MinIO Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: margwa-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000" # API
+      - "9001:9001" # Console
+    environment:
+      MINIO_ROOT_USER: margwa_admin
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-margwa_minio_secret_2024}
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:9001
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - margwa-network
+
+  # MinIO Bucket Initialization
+  minio-init:
+    image: minio/mc:latest
+    container_name: margwa-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c " echo 'Waiting for MinIO...'; sleep 5; mc alias set myminio http://minio:9000 margwa_admin margwa_minio_secret_2024; echo 'Creating buckets...'; mc mb myminio/avatars --ignore-existing; mc mb myminio/driver-documents --ignore-existing; mc mb myminio/vehicle-documents --ignore-existing; mc mb myminio/temp-uploads --ignore-existing; echo 'Setting bucket policies...'; mc anonymous set download myminio/avatars; mc anonymous set private myminio/driver-documents; mc anonymous set private myminio/vehicle-documents; mc anonymous set private myminio/temp-uploads; echo 'MinIO initialization complete!'; "
+    networks:
+      - margwa-network
+
   # Redis Commander (Redis Management UI)
   redis-commander:
     image: rediscommander/redis-commander:latest
@@ -226,6 +261,8 @@ volumes:
   redis_data:
     driver: local
   pgadmin_data:
+    driver: local
+  minio_data:
     driver: local
 
 networks:

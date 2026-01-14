@@ -227,8 +227,8 @@ async function seed() {
             routeId: route1[0].id,
             driverId: driverProfile1.id,
             vehicleId: vehicle1.id,
-            scheduledDate: today.toISOString().split('T')[0],
-            departureTime: new Date(`${today.toISOString().split('T')[0]}T09:00:00`),
+            scheduledDate: today.toISOString()?.split('T')[0],
+            departureTime: new Date(`${today.toISOString()?.split('T')[0]}T09:00:00`),
             seatsAvailable: 6,
             status: 'scheduled',
         });
@@ -237,8 +237,8 @@ async function seed() {
             routeId: route2[0].id,
             driverId: driverProfile2.id,
             vehicleId: vehicle2.id,
-            scheduledDate: today.toISOString().split('T')[0],
-            departureTime: new Date(`${today.toISOString().split('T')[0]}T15:00:00`),
+            scheduledDate: today.toISOString()?.split('T')[0],
+            departureTime: new Date(`${today.toISOString()?.split('T')[0]}T15:00:00`),
             seatsAvailable: 6,
             status: 'scheduled',
         });
@@ -247,8 +247,8 @@ async function seed() {
             routeId: route1[0].id,
             driverId: driverProfile1.id,
             vehicleId: vehicle1.id,
-            scheduledDate: tomorrow.toISOString().split('T')[0],
-            departureTime: new Date(`${tomorrow.toISOString().split('T')[0]}T09:00:00`),
+            scheduledDate: tomorrow.toISOString()?.split('T')[0],
+            departureTime: new Date(`${tomorrow.toISOString()?.split('T')[0]}T09:00:00`),
             seatsAvailable: 6,
             status: 'scheduled',
         });

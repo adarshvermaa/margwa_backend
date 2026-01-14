@@ -1,0 +1,35 @@
+{
+    "name": "@margwa/storage-service",
+    "version": "1.0.0",
+    "description": "MinIO-based object storage service for Margwa platform",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "test": "jest",
+        "lint": "eslint src --ext .ts"
+    },
+    "dependencies": {
+        "express": "^4.18.2",
+        "minio": "^7.1.3",
+        "multer": "^1.4.5-lts.1",
+        "sharp": "^0.33.1",
+        "uuid": "^9.0.1",
+        "dotenv": "^16.3.1",
+        "cors": "^2.8.5",
+        "jsonwebtoken": "^9.0.2",
+        "winston": "^3.11.0"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.21",
+        "@types/multer": "^1.4.11",
+        "@types/minio": "^7.1.1",
+        "@types/uuid": "^9.0.7",
+        "@types/cors": "^2.8.17",
+        "@types/jsonwebtoken": "^9.0.5",
+        "@types/node": "^20.10.0",
+        "tsx": "^4.7.0",
+        "typescript": "^5.3.3"
+    }
+}

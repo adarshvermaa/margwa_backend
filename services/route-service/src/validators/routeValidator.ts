@@ -3,25 +3,32 @@ import { z } from 'zod';
 // Validation schemas
 export const createRouteSchema = z.object({
     driverId: z.string().uuid(),
-    vehicleId: z.string().uuid(),
-    fromCity: z.string().min(1),
-    fromLatitude: z.number().min(-90).max(90).optional(),
-    fromLongitude: z.number().min(-180).max(180).optional(),
-    toCity: z.string().min(1),
-    toLatitude: z.number().min(-90).max(90).optional(),
-    toLongitude: z.number().min(-180).max(180).optional(),
-    departureTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/),
-    arrivalTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/),
-    estimatedDurationMinutes: z.number().int().positive().optional(),
-    distanceKm: z.number().positive().optional(),
-    basePricePerSeat: z.number().positive(),
+    startLocation: z.object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        address: z.string().min(1),
+    }),
+    endLocation: z.object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        address: z.string().min(1),
+    }),
+    departureTime: z.string().datetime(), // ISO 8601 datetime string
+    arrivalTime: z.string().datetime(), // ISO 8601 datetime string
+    price: z.number().positive(),
     totalSeats: z.number().int().positive(),
-    genderPreference: z.enum(['any', 'male', 'female']).default('any'),
-    pickupRadiusKm: z.number().int().positive().default(5),
-    dropRadiusKm: z.number().int().positive().default(5),
-    amenities: z.array(z.string()).default([]),
-    isActive: z.boolean().default(true),
-    recurringDays: z.array(z.number().int().min(0).max(6)).default([]),
+    availableSeats: z.number().int().positive(),
+    vehicleInfo: z.object({
+        type: z.string().min(1),
+        number: z.string().min(1),
+        model: z.string().min(1),
+    }),
+    status: z.enum(['active', 'inactive', 'completed', 'cancelled']).default('active'),
+    genderPreference: z.enum(['any', 'male', 'female']).optional().default('any'),
+    pickupRadiusKm: z.number().int().positive().optional().default(5),
+    dropRadiusKm: z.number().int().positive().optional().default(5),
+    amenities: z.array(z.string()).optional().default([]),
+    recurringDays: z.array(z.number().int().min(0).max(6)).optional().default([]),
 });
 
 export const updateRouteSchema = createRouteSchema.partial();

@@ -3,7 +3,7 @@ import { users } from './users';
 
 // Enums
 export const backgroundCheckStatusEnum = pgEnum('background_check_status', ['pending', 'approved', 'rejected']);
-export const vehicleTypeEnum = pgEnum('vehicle_type', ['sedan', 'suv', 'van', 'hatchback']);
+export const vehicleTypeEnum = pgEnum('vehicle_type', ['auto', 'hatchback', 'sedan', 'suv', 'muv', 'van']);
 export const verificationStatusEnum = pgEnum('verification_status', ['pending', 'verified', 'rejected']);
 
 // Driver Profiles Table
@@ -40,6 +40,11 @@ export const vehicles = pgTable('vehicles', {
     insuranceNumber: varchar('insurance_number', { length: 50 }),
     insuranceExpiry: date('insurance_expiry'),
     insuranceImageUrl: text('insurance_image_url'),
+    pucNumber: varchar('puc_number', { length: 50 }),
+    pucExpiry: date('puc_expiry'),
+    pucImageUrl: text('puc_image_url'),
+    permitNumber: varchar('permit_number', { length: 50 }),
+    permitImageUrl: text('permit_image_url'),
     verificationStatus: verificationStatusEnum('verification_status').notNull().default('pending'),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -58,6 +63,21 @@ export const driverDocuments = pgTable('driver_documents', {
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Vehicle Seat Configurations Table
+export const vehicleSeatConfigurations = pgTable('vehicle_seat_configurations', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    vehicleId: uuid('vehicle_id').notNull().references(() => vehicles.id, { onDelete: 'cascade' }),
+    seatId: varchar('seat_id', { length: 50 }).notNull(),
+    rowNumber: integer('row_number').notNull(),
+    position: varchar('position', { length: 20 }).notNull(), // left, right, center
+    isAvailable: boolean('is_available').notNull().default(true),
+    seatType: varchar('seat_type', { length: 20 }).notNull(), // driver, passenger
+    price: decimal('price', { precision: 10, scale: 2 }),
+    amenities: text('amenities'), // JSONB in database, text in Drizzle
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Type exports
 export type DriverProfile = typeof driverProfiles.$inferSelect;
 export type NewDriverProfile = typeof driverProfiles.$inferInsert;
@@ -65,3 +85,5 @@ export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
 export type DriverDocument = typeof driverDocuments.$inferSelect;
 export type NewDriverDocument = typeof driverDocuments.$inferInsert;
+export type VehicleSeatConfiguration = typeof vehicleSeatConfigurations.$inferSelect;
+export type NewVehicleSeatConfiguration = typeof vehicleSeatConfigurations.$inferInsert;

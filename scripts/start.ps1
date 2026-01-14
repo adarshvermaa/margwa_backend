@@ -10,7 +10,7 @@ Write-Host "Stopping any running services..." -ForegroundColor Yellow
 Write-Host ""
 
 # Stop services on all ports
-$ports = @(3000, 3001, 3002, 3004, 3005, 3006, 3007, 3008, 3009)
+$ports = @(3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 3010)
 foreach ($port in $ports) {
     try {
         $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
@@ -46,6 +46,10 @@ Write-Host "Starting Route Service (Port 3002)..." -ForegroundColor Yellow
 Start-Process cmd -ArgumentList "/k", "cd services\route-service && npm run dev" -WindowStyle Normal
 Start-Sleep -Seconds 2
 
+Write-Host "Starting Driver Service (Port 3003)..." -ForegroundColor Yellow
+Start-Process cmd -ArgumentList "/k", "cd services\driver-service && npx -y nodemon --watch . --ext go --exec ""go run main.go""" -WindowStyle Normal
+Start-Sleep -Seconds 2
+
 Write-Host "Starting Real-time Service (Port 3004)..." -ForegroundColor Yellow
 Start-Process cmd -ArgumentList "/k", "cd services\realtime-service && npm run dev" -WindowStyle Normal
 Start-Sleep -Seconds 2
@@ -70,6 +74,10 @@ Write-Host "Starting Places Service (Port 3009)..." -ForegroundColor Yellow
 Start-Process cmd -ArgumentList "/k", "cd services\places-service && npm run dev" -WindowStyle Normal
 Start-Sleep -Seconds 2
 
+Write-Host "Starting Storage Service (Port 3010)..." -ForegroundColor Yellow
+Start-Process cmd -ArgumentList "/k", "cd services\storage-service && npm run dev" -WindowStyle Normal
+Start-Sleep -Seconds 2
+
 Write-Host ""
 Write-Host "====================================" -ForegroundColor Cyan
 Write-Host "All services started!" -ForegroundColor Green
@@ -79,12 +87,15 @@ Write-Host "Services running:" -ForegroundColor White
 Write-Host "- API Gateway:          http://localhost:3000" -ForegroundColor Gray
 Write-Host "- Auth Service:         http://localhost:3001" -ForegroundColor Gray
 Write-Host "- Route Service:        http://localhost:3002" -ForegroundColor Gray
+Write-Host "- Driver Service:       http://localhost:3003" -ForegroundColor Gray
 Write-Host "- Real-time Service:    http://localhost:3004" -ForegroundColor Gray
 Write-Host "- Chat Service:         http://localhost:3005" -ForegroundColor Gray
 Write-Host "- Notification Service: http://localhost:3006" -ForegroundColor Gray
 Write-Host "- Payment Service:      http://localhost:3007" -ForegroundColor Gray
 Write-Host "- Analytics Service:    http://localhost:3008" -ForegroundColor Gray
 Write-Host "- Places Service:       http://localhost:3009" -ForegroundColor Gray
+Write-Host "- Storage Service:      http://localhost:3010" -ForegroundColor Gray
+Write-Host "- MinIO Console:        http://localhost:9001" -ForegroundColor Gray
 Write-Host ""
 
 # Ask to test services

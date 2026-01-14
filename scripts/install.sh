@@ -88,9 +88,23 @@ cd ../..
 echo ""
 
 # Install Go Analytics Service dependencies
-echo "[11/11] Installing Go Analytics Service dependencies..."
+echo "[11/12] Installing Go Analytics Service dependencies..."
 cd services/analytics-service
 go mod download
+cd ../..
+echo ""
+
+# Install Go Driver Service dependencies
+echo "[12/12] Installing Go Driver Service dependencies..."
+cd services/driver-service
+go mod download
+cd ../..
+echo ""
+
+# Install Storage Service dependencies
+echo "[13/13] Installing Storage Service dependencies..."
+cd services/storage-service
+npm install
 cd ../..
 echo ""
 

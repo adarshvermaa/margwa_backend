@@ -10,26 +10,60 @@ export class RouteService {
     async createRoute(data: CreateRouteInput) {
         try {
             const db = getDatabase();
+
+            // 1. Find or create vehicle
+            // @ts-ignore - Schema has vehicleInfo but inferred type might lag
+            const { vehicleInfo, driverId } = data as any;
+
+            let vehicleId: string;
+
+            // Check if vehicle exists
+            const [existingVehicle] = await db.select()
+                .from(vehicles)
+                .where(and(
+                    eq(vehicles.driverId, driverId),
+                    eq(vehicles.vehicleNumber, vehicleInfo.number)
+                ))
+                .limit(1);
+
+            if (existingVehicle) {
+                vehicleId = existingVehicle.id;
+            } else {
+                // Create new vehicle
+                const [newVehicle] = await db.insert(vehicles).values({
+                    driverId: driverId,
+                    vehicleType: (vehicleInfo.type.toLowerCase()) as any,
+                    vehicleNumber: vehicleInfo.number,
+                    vehicleName: vehicleInfo.model,
+                    totalSeats: data.totalSeats,
+                    isActive: true,
+                }).returning();
+                vehicleId = newVehicle.id;
+            }
+
+            // 2. Create route
+            const { startLocation, endLocation, price, status } = data as any;
+
             const [route] = await db.insert(routes).values({
                 driverId: data.driverId,
-                vehicleId: data.vehicleId,
-                fromCity: data.fromCity,
-                fromLatitude: data.fromLatitude?.toString(),
-                fromLongitude: data.fromLongitude?.toString(),
-                toCity: data.toCity,
-                toLatitude: data.toLatitude?.toString(),
-                toLongitude: data.toLongitude?.toString(),
+                vehicleId: vehicleId,
+                fromCity: startLocation.address,
+                fromLatitude: startLocation.latitude.toString(),
+                fromLongitude: startLocation.longitude.toString(),
+                toCity: endLocation.address,
+                toLatitude: endLocation.latitude.toString(),
+                toLongitude: endLocation.longitude.toString(),
                 departureTime: data.departureTime,
                 arrivalTime: data.arrivalTime,
-                estimatedDurationMinutes: data.estimatedDurationMinutes,
-                distanceKm: data.distanceKm?.toString(),
-                basePricePerSeat: data.basePricePerSeat.toString(),
+                // estimatedDurationMinutes: data.estimatedDurationMinutes, // Not provided in new schema yet
+                // distanceKm: data.distanceKm?.toString(),
+                basePricePerSeat: price.toString(),
                 totalSeats: data.totalSeats,
                 genderPreference: data.genderPreference,
                 pickupRadiusKm: data.pickupRadiusKm,
                 dropRadiusKm: data.dropRadiusKm,
                 amenities: data.amenities,
-                isActive: data.isActive,
+                isActive: status === 'active',
                 recurringDays: data.recurringDays,
             }).returning();
 
@@ -72,18 +106,34 @@ export class RouteService {
     async updateRoute(routeId: string, data: UpdateRouteInput) {
         try {
             const updateData: any = {};
+            const input = data as any; // Cast to access nested fields safely
 
-            if (data.fromCity) updateData.fromCity = data.fromCity;
-            if (data.toCity) updateData.toCity = data.toCity;
-            if (data.departureTime) updateData.departureTime = data.departureTime;
-            if (data.arrivalTime) updateData.arrivalTime = data.arrivalTime;
-            if (data.basePricePerSeat !== undefined) updateData.basePricePerSeat = data.basePricePerSeat.toString();
-            if (data.totalSeats) updateData.totalSeats = data.totalSeats;
-            if (data.genderPreference) updateData.genderPreference = data.genderPreference;
-            if (data.pickupRadiusKm) updateData.pickupRadiusKm = data.pickupRadiusKm;
-            if (data.amenities) updateData.amenities = data.amenities;
-            if (data.isActive !== undefined) updateData.isActive = data.isActive;
-            if (data.recurringDays) updateData.recurringDays = data.recurringDays;
+            // Map input fields to DB columns
+            if (input.startLocation) {
+                updateData.fromCity = input.startLocation.address;
+                updateData.fromLatitude = input.startLocation.latitude.toString();
+                updateData.fromLongitude = input.startLocation.longitude.toString();
+            }
+
+            if (input.endLocation) {
+                updateData.toCity = input.endLocation.address;
+                updateData.toLatitude = input.endLocation.latitude.toString();
+                updateData.toLongitude = input.endLocation.longitude.toString();
+            }
+
+            if (input.departureTime) updateData.departureTime = input.departureTime;
+            if (input.arrivalTime) updateData.arrivalTime = input.arrivalTime;
+
+            if (input.price !== undefined) updateData.basePricePerSeat = input.price.toString();
+
+            if (input.totalSeats) updateData.totalSeats = input.totalSeats;
+            if (input.genderPreference) updateData.genderPreference = input.genderPreference;
+            if (input.pickupRadiusKm) updateData.pickupRadiusKm = input.pickupRadiusKm;
+            if (input.amenities) updateData.amenities = input.amenities;
+
+            if (input.status) updateData.isActive = input.status === 'active';
+
+            if (input.recurringDays) updateData.recurringDays = input.recurringDays;
 
             updateData.updatedAt = new Date();
 

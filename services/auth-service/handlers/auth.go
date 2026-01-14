@@ -31,7 +31,7 @@ func NewAuthHandler(db *pgxpool.Pool, redis *redis.Client, cfg *config.Config) *
 	}
 }
 
-// Register creates a new user account
+// Register creates a new user account or upgrades existing user role
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req models.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -40,13 +40,46 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	// Check if user already exists
-	var existingID uuid.UUID
+	var existingUser models.User
 	err := h.db.QueryRow(context.Background(),
-		"SELECT id FROM users WHERE phone_number = $1 AND phone_country_code = $2",
+		`SELECT id, user_type FROM users WHERE phone_number = $1 AND phone_country_code = $2`,
 		req.PhoneNumber, req.PhoneCountryCode,
-	).Scan(&existingID)
+	).Scan(&existingUser.ID, &existingUser.UserType)
 
 	if err == nil {
+		// User exists - check if we need to upgrade role
+		if existingUser.UserType != "both" && existingUser.UserType != req.UserType {
+			// Existing user registered in one app, now registering in the other
+			// Upgrade to 'both'
+			log.Printf("Upgrading user %s from '%s' to 'both'", existingUser.ID, existingUser.UserType)
+
+			_, err = h.db.Exec(context.Background(),
+				`UPDATE users SET user_type = 'both', updated_at = NOW() WHERE id = $1`,
+				existingUser.ID,
+			)
+
+			if err != nil {
+				log.Printf("Error upgrading user role: %v", err)
+				c.JSON(http.StatusInternalServerError, utils.ErrorResponse("DATABASE_ERROR", "Failed to upgrade user role", nil))
+				return
+			}
+
+			// Fetch updated user
+			err = h.db.QueryRow(context.Background(),
+				`SELECT id, phone_number, phone_country_code, full_name, email, profile_image_url, user_type, 
+				        is_verified, is_active, language_preference, created_at, updated_at, last_login_at
+				 FROM users WHERE id = $1`,
+				existingUser.ID,
+			).Scan(&existingUser.ID, &existingUser.PhoneNumber, &existingUser.PhoneCountryCode, &existingUser.FullName,
+				&existingUser.Email, &existingUser.ProfileImageURL, &existingUser.UserType, &existingUser.IsVerified,
+				&existingUser.IsActive, &existingUser.LanguagePreference, &existingUser.CreatedAt,
+				&existingUser.UpdatedAt, &existingUser.LastLoginAt)
+
+			c.JSON(http.StatusOK, utils.SuccessResponse(existingUser, "User role upgraded to 'both'. Please verify with OTP."))
+			return
+		}
+
+		// User already has this role or 'both'
 		c.JSON(http.StatusConflict, utils.ErrorResponse("USER_ALREADY_EXISTS", "User with this phone number already exists", nil))
 		return
 	}
@@ -350,10 +383,13 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 		  full_name = COALESCE($1, full_name),
 		  email = COALESCE($2, email),
 		  profile_image_url = COALESCE($3, profile_image_url),
-		  language_preference = COALESCE($4, language_preference),
+		  dob = COALESCE($4, dob),
+		  gender = COALESCE($5, gender),
+		  is_profile_complete = COALESCE($6, is_profile_complete),
+		  language_preference = COALESCE($7, language_preference),
 		  updated_at = NOW()
-		 WHERE id = $5`,
-		req.FullName, req.Email, req.ProfileImageURL, req.LanguagePreference, userID,
+		 WHERE id = $8`,
+		req.FullName, req.Email, req.ProfileImageURL, req.DateOfBirth, req.Gender, req.IsProfileComplete, req.LanguagePreference, userID,
 	)
 
 	if err != nil {
@@ -365,12 +401,12 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	// Get updated user
 	var user models.User
 	h.db.QueryRow(context.Background(),
-		`SELECT id, phone_number, phone_country_code, full_name, email, profile_image_url, user_type,
+		`SELECT id, phone_number, phone_country_code, full_name, email, profile_image_url, dob, gender, is_profile_complete, user_type,
 		  is_verified, is_active, language_preference, created_at, updated_at, last_login_at
 		 FROM users WHERE id = $1`,
 		userID,
 	).Scan(&user.ID, &user.PhoneNumber, &user.PhoneCountryCode, &user.FullName, &user.Email,
-		&user.ProfileImageURL, &user.UserType, &user.IsVerified, &user.IsActive,
+		&user.ProfileImageURL, &user.DateOfBirth, &user.Gender, &user.IsProfileComplete, &user.UserType, &user.IsVerified, &user.IsActive,
 		&user.LanguagePreference, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt)
 
 	c.JSON(http.StatusOK, utils.SuccessResponse(user, "Profile updated successfully"))

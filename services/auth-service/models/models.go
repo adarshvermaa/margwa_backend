@@ -13,6 +13,9 @@ type User struct {
 	FullName           *string    `json:"fullName"`
 	Email              *string    `json:"email"`
 	ProfileImageURL    *string    `json:"profileImageUrl"`
+	DateOfBirth        *time.Time `json:"dob"`
+	Gender             *string    `json:"gender"`
+	IsProfileComplete  *bool      `json:"isProfileComplete"`
 	UserType           string     `json:"userType"`
 	IsVerified         bool       `json:"isVerified"`
 	IsActive           bool       `json:"isActive"`
@@ -71,10 +74,13 @@ type RefreshTokenRequest struct {
 }
 
 type UpdateProfileRequest struct {
-	FullName           *string `json:"fullName"`
-	Email              *string `json:"email"`
-	ProfileImageURL    *string `json:"profileImageUrl"`
-	LanguagePreference *string `json:"languagePreference"`
+	FullName           *string    `json:"fullName"`
+	Email              *string    `json:"email"`
+	ProfileImageURL    *string    `json:"profileImageUrl"`
+	DateOfBirth        *time.Time `json:"dob"`
+	Gender             *string    `json:"gender"`
+	IsProfileComplete  *bool      `json:"isProfileComplete"`
+	LanguagePreference *string    `json:"languagePreference"`
 }
 
 type AuthResponse struct {

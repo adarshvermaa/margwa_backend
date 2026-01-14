@@ -69,6 +69,8 @@ app.use('/api/v1/bookings', require('./routes/bookings').default);
 app.use('/api/v1/chat', require('./routes/chat').default);
 app.use('/api/v1/payments', require('./routes/payments').default);
 app.use('/api/v1/places', require('./routes/places').default);
+app.use('/api/v1/driver', require('./routes/driver').default);
+app.use('/api/v1/storage', require('./routes/storage').default);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

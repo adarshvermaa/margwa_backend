@@ -9,7 +9,7 @@ cd ..
 
 :menu
 echo Select an option:
-echo 1. Start infrastructure (Postgres + Redis)
+echo 1. Start infrastructure (Postgres + Redis + MinIO)
 echo 2. Start all services with Docker Compose
 echo 3. Stop all services
 echo 4. View logs
@@ -36,14 +36,20 @@ goto menu
 
 :start_infra
 echo.
-echo Starting Postgres and Redis...
-docker-compose up -d postgres redis pgadmin redis-commander
+echo Starting infrastructure services...
+docker-compose up -d postgres redis minio minio-init pgadmin redis-commander
 echo.
 echo Infrastructure started!
-echo - PostgreSQL: http://localhost:5432
-echo - PgAdmin: http://localhost:5050
-echo - Redis: http://localhost:6379
-echo - Redis Commander: http://localhost:8081
+echo - PostgreSQL:       http://localhost:5432
+echo - PgAdmin:          http://localhost:5050
+echo - Redis:            http://localhost:6379
+echo - Redis Commander:  http://localhost:8081
+echo - MinIO API:        http://localhost:9000
+echo - MinIO Console:    http://localhost:9001
+echo.
+echo MinIO Credentials:
+echo   Username: margwa_admin
+echo   Password: margwa_minio_secret_2024
 echo.
 pause
 goto menu
