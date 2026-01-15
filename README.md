@@ -1,17 +1,35 @@
 # Margwa Backend Services
 
-A scalable, high-performance backend infrastructure for the Margwa ride-sharing platform built with TypeScript, Go, and Rust.
+A scalable, high-performance backend infrastructure for the Margwa ride-sharing platform built with TypeScript and Go.
 
 ## 🏗️ Architecture
 
 **Production-Ready Microservices with Load Balancing & Auto-Scaling:**
 
-- **TypeScript (Node.js)**: API Gateway, Route Service, Real-time Service, Chat Service
-- **Go**: Authentication Service, Booking Service (high concurrency)
-- **Rust**: Payment Service, Analytics Service (performance-critical)
-- **NGINX**: Load balancer and reverse proxy
-- **Kubernetes**: Container orchestration with Horizontal Pod Autoscaler (HPA)
-- **Monitoring**: Prometheus + Grafana for observability
+### Services Overview
+
+| Service | Technology | Port | Description |
+|---------|-----------|------|-------------|
+| **API Gateway** | TypeScript | 3000 | Main entry point, request routing, rate limiting |
+| **Auth Service** | Go | 3001 | OTP authentication, JWT management |
+| **Route Service** | TypeScript | 3002 | Route creation, search, management |
+| **Driver Service** | Go | 3003 | Driver profiles, vehicles, documents |
+| **Realtime Service** | TypeScript | 3004 | WebSocket, live location tracking |
+| **Chat Service** | TypeScript | 3005 | Messaging, conversations |
+| **Notification Service** | TypeScript | 3006 | Push notifications (FCM) |
+| **Payment Service** | Go | 3007 | Payment processing, earnings |
+| **Analytics Service** | Go | 3008 | Analytics, reporting |
+| **Places Service** | TypeScript | 3009 | Google Places, geocoding |
+| **Storage Service** | TypeScript | 3010 | MinIO file storage, image processing |
+
+### Infrastructure Components
+
+- **PostgreSQL 15** with PostGIS extension
+- **Redis 7** for caching and pub/sub
+- **MinIO** S3-compatible object storage
+- **NGINX** Load balancer and reverse proxy
+- **Kubernetes** Container orchestration with HPA
+- **Prometheus + Grafana** Monitoring and observability
 
 ### Auto-Scaling Capabilities
 
@@ -34,7 +52,7 @@ A scalable, high-performance backend infrastructure for the Margwa ride-sharing 
 - PostgreSQL 14+ with PostGIS
 - Redis 7+
 - Go 1.21+ (for Go services)
-- Rust 1.75+ (for Rust services)
+- MinIO (or use Docker)
 
 ### Installation
 
@@ -52,7 +70,7 @@ A scalable, high-performance backend infrastructure for the Margwa ride-sharing 
 
 3. **Start infrastructure services**
    ```bash
-   docker-compose up -d postgres redis
+   docker-compose up -d postgres redis minio
    ```
 
 4. **Install dependencies**
@@ -74,40 +92,54 @@ A scalable, high-performance backend infrastructure for the Margwa ride-sharing 
    ```
 
 7. **Start services**
+   
+   **Automated (Recommended):**
    ```bash
-   # Start all TypeScript services
-   npm run dev:gateway    # Port 3000
-   npm run dev:routes     # Port 3002
-   npm run dev:realtime   # Port 3004
-   npm run dev:chat       # Port 3005
+   # Windows
+   cd scripts
+   .\start.ps1
+   
+   # Unix/Linux/macOS
+   cd scripts
+   ./start.sh
+   ```
+   
+   **Manual:**
+   ```bash
+   # See individual service READMEs or COMPLETE_WORKFLOW.md
    ```
 
 ## 📚 Documentation
 
 ### Setup & Development
-- **[Getting Started Guide](./GETTING_STARTED.md)** - Detailed setup instructions
+- **[Complete Workflow A-Z](./docs/COMPLETE_WORKFLOW.md)** - Complete setup from scratch to deployment
+- **[Getting Started Guide](./GETTING_STARTED.md)** - Quick setup instructions
 - **[API Documentation](./docs/API.md)** - Complete API reference
-- **[Development Workflow](./docs/DEVELOPMENT.md)** - Developer guide
+- **[Scripts Guide](./SCRIPTS.md)** - All scripts documentation
 
-### Production Deployment
+### Deployment
+- **[Docker Guide](./docs/DOCKER_GUIDE.md)** - Complete Docker deployment
 - **[Kubernetes Deployment Guide](./docs/KUBERNETES_DEPLOYMENT.md)** - Complete K8s deployment
-- **[Load Balancing Guide](./docs/LOAD_BALANCING.md)** - NGINX configuration and tuning
-- **[Auto-Scaling Guide](./docs/AUTO_SCALING.md)** - HPA configuration and optimization
-- **[Monitoring Guide](./docs/MONITORING.md)** - Prometheus and Grafana setup
+- **[Production Deployment](./docs/PRODUCTION_DEPLOYMENT.md)** - AWS/GCP production setup
+- **[Load Balancing Guide](./docs/LOAD_BALANCING.md)** - NGINX configuration
+- **[Auto-Scaling Guide](./docs/AUTO_SCALING.md)** - HPA configuration
 
 ## 📦 Project Structure
 
 ```
 margwa_backend/
-├── services/                 # Microservices
-│   ├── api-gateway/          # TypeScript - Main API entry point
-│   ├── auth-service/         # Go - Authentication & authorization
-│   ├── route-service/        # TypeScript - Route management
-│   ├── realtime-service/     # TypeScript - WebSocket real-time
-│   ├── chat-service/         # TypeScript - Chat messaging
-│   ├── payment-service/      # Rust - Payment processing
-│   ├── analytics-service/    # Rust - Analytics & reporting
-│   └── notification-service/ # TypeScript - Push notifications
+├── services/                 # Microservices (11 services)
+│   ├── api-gateway/          # TypeScript - Main API entry point (Port 3000)
+│   ├── auth-service/         # Go - Authentication & OTP (Port 3001)
+│   ├── route-service/        # TypeScript - Route management (Port 3002)
+│   ├── driver-service/       # Go - Driver profiles & vehicles (Port 3003)
+│   ├── realtime-service/     # TypeScript - WebSocket real-time (Port 3004)
+│   ├── chat-service/         # TypeScript - Chat messaging (Port 3005)
+│   ├── notification-service/ # TypeScript - Push notifications (Port 3006)
+│   ├── payment-service/      # Go - Payment processing (Port 3007)
+│   ├── analytics-service/    # Go - Analytics & reporting (Port 3008)
+│   ├── places-service/       # TypeScript - Google Places (Port 3009)
+│   └── storage-service/      # TypeScript - MinIO storage (Port 3010)
 ├── k8s/                      # Kubernetes manifests
 │   ├── deployments/          # Service deployments
 │   ├── autoscaling/          # HPA configurations
@@ -128,12 +160,22 @@ margwa_backend/
 │   ├── types/                # Shared TypeScript types
 │   └── utils/                # Common utilities
 ├── scripts/                  # Deployment & utility scripts
+│   ├── start.ps1/start.sh    # Start all services
+│   ├── install.bat/install.sh # Install dependencies
+│   ├── docker.bat/docker.sh  # Docker management
 │   ├── deploy-k8s.sh         # Kubernetes deployment
-│   ├── verify-scaling.sh     # Verify auto-scaling
-│   └── load-test/            # K6 load testing scripts
+│   ├── deploy-gcp.sh         # GCP deployment
+│   ├── deploy-aws.sh         # AWS deployment
+│   ├── test-api.js           # API testing
+│   └── seed-data.ts          # Database seeding
 ├── docs/                     # Documentation
-├── docker-compose.yml
-└── package.json
+│   ├── COMPLETE_WORKFLOW.md  # A-Z workflow guide
+│   ├── DOCKER_GUIDE.md       # Docker deployment
+│   ├── API.md                # API documentation
+│   └── ...                   # Other guides
+├── docker-compose.yml        # Docker Compose config
+├── .env.example              # Environment variables template
+└── package.json              # Root package.json
 ```
 
 ## 🗄️ Database Schema
@@ -186,33 +228,141 @@ npm run test           # Run tests
 http://localhost:3000/api/v1
 ```
 
-### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/send-otp` - Send OTP for verification
-- `POST /auth/verify-otp` - Verify OTP and login
-- `POST /auth/refresh-token` - Refresh access token
-- `GET /auth/profile` - Get user profile
+All requests to microservices should go through the API Gateway (port 3000).
 
-### Routes
-- `POST /routes` - Create new route (driver)
-- `GET /routes` - List driver routes
-- `POST /routes/search` - Search available routes
-- `GET /routes/:id` - Get route details
-- `PUT /routes/:id` - Update route
-- `DELETE /routes/:id` - Delete route
+### Authentication Service (Port 3001)
 
-### Bookings
-- `POST /bookings/request` - Request booking
-- `POST /bookings/:id/accept` - Accept booking (driver)
-- `POST /bookings/:id/reject` - Reject booking (driver)
-- `GET /bookings/client/:id` - Get client bookings
-- `GET /bookings/driver/:id` - Get driver bookings
-
-### Real-time (WebSocket)
+```bash
+POST   /api/v1/auth/send-otp        # Send OTP to phone number
+POST   /api/v1/auth/verify-otp      # Verify OTP and login
+POST   /api/v1/auth/refresh-token   # Refresh JWT token
+POST   /api/v1/auth/logout          # Logout user
+GET    /api/v1/auth/profile         # Get user profile
+PUT    /api/v1/auth/profile         # Update user profile
 ```
-ws://localhost:3004
+
+### Driver Service (Port 3003)
+
+```bash
+# Driver Profile
+GET    /api/v1/driver/profile            # Get driver profile
+PUT    /api/v1/driver/profile            # Update driver profile
+PUT    /api/v1/driver/online-status      # Update online status
+PUT    /api/v1/driver/location           # Update location
+GET    /api/v1/driver/stats              # Get driver statistics
+
+# Vehicles
+GET    /api/v1/driver/vehicles           # Get all vehicles
+GET    /api/v1/driver/vehicles/:id       # Get vehicle by ID
+POST   /api/v1/driver/vehicles           # Create vehicle
+PUT    /api/v1/driver/vehicles/:id       # Update vehicle
+DELETE /api/v1/driver/vehicles/:id       # Delete vehicle
+PUT    /api/v1/driver/vehicles/:id/activate  # Set active vehicle
+
+# Seat Configuration
+POST   /api/v1/driver/vehicles/:id/seats   # Save seat config
+GET    /api/v1/driver/vehicles/:id/seats   # Get seat config
+
+# Documents
+GET    /api/v1/driver/documents          # Get all documents
+POST   /api/v1/driver/documents/upload   # Upload document
+DELETE /api/v1/driver/documents/:id      # Delete document
 ```
-Events: `location:update`, `booking:new`, `booking:accepted`, `chat:message`
+
+### Route Service (Port 3002)
+
+```bash
+POST   /api/v1/routes                # Create route (driver)
+GET    /api/v1/routes/driver/:id     # Get driver routes
+POST   /api/v1/routes/search         # Search available routes
+GET    /api/v1/routes/popular        # Get popular routes
+GET    /api/v1/routes/:id            # Get route details
+PUT    /api/v1/routes/:id            # Update route
+DELETE /api/v1/routes/:id            # Delete route
+```
+
+### Chat Service (Port 3005)
+
+```bash
+POST   /api/v1/chat/conversations            # Create or get conversation
+GET    /api/v1/chat/conversations/user/:id   # Get user conversations
+POST   /api/v1/chat/messages                 # Send message
+GET    /api/v1/chat/messages/:conversationId # Get messages
+PUT    /api/v1/chat/messages/:id/read        # Mark as read
+GET    /api/v1/chat/unread/:userId           # Get unread count
+```
+
+### Notification Service (Port 3006)
+
+```bash
+POST   /api/v1/notifications             # Create notification
+GET    /api/v1/notifications/:userId     # Get user notifications
+PUT    /api/v1/notifications/:id/read    # Mark as read
+DELETE /api/v1/notifications/:id         # Delete notification
+POST   /api/v1/notifications/fcm-token   # Register FCM token
+```
+
+### Payment Service (Port 3007)
+
+```bash
+# Payments
+POST   /api/v1/payments/initiate         # Initiate payment
+POST   /api/v1/payments/verify           # Verify payment
+GET    /api/v1/payments/:bookingId       # Get payment by booking
+POST   /api/v1/payments/refund           # Process refund
+POST   /api/v1/payments/webhook          # Payment gateway webhook
+
+# Earnings
+POST   /api/v1/earnings/calculate        # Calculate earnings
+GET    /api/v1/earnings/driver/:id       # Get driver earnings
+POST   /api/v1/earnings/withdraw         # Process withdrawal
+```
+
+### Places Service (Port 3009)
+
+```bash
+GET    /api/v1/places/autocomplete       # Autocomplete places
+GET    /api/v1/places/geocode            # Geocode address
+GET    /api/v1/places/reverse-geocode    # Reverse geocode coordinates
+GET    /api/v1/places/details/:placeId   # Get place details
+```
+
+### Storage Service (Port 3010)
+
+```bash
+POST   /api/v1/storage/upload/avatar            # Upload avatar
+POST   /api/v1/storage/upload/driver-document   # Upload driver doc
+POST   /api/v1/storage/upload/vehicle-document  # Upload vehicle doc
+GET    /api/v1/storage/download/:filename       # Download file
+DELETE /api/v1/storage/delete/:filename          # Delete file
+```
+
+### Realtime Service (WebSocket - Port 3004)
+
+```javascript
+// Connection
+const socket = io('http://localhost:3004', {
+  auth: { token: 'jwt-token' }
+});
+
+// Events (Client → Server)
+socket.emit('location:update', { lat, lng, heading, speed, rideId });
+socket.emit('ride:join', rideId);
+socket.emit('chat:message', { conversationId, receiverId, message });
+socket.emit('driver:online');
+socket.emit('driver:offline');
+
+// Events (Server → Client)
+socket.on('location:updated', (data) => { /* ... */ });
+socket.on('booking:new', (data) => { /* ... */ });
+socket.on('booking:updated', (data) => { /* ... */ });
+socket.on('chat:message', (data) => { /* ... */ });
+socket.on('notification:new', (data) => { /* ... */ });
+```
+
+> **💡 Tip:** See [docs/API.md](./docs/API.md) for complete API documentation with request/response examples.
+
+---
 
 ## 🔐 Environment Variables
 
